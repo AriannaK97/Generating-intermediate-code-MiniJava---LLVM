@@ -81,6 +81,20 @@ public class Method extends AbstractType {
         }
     }
 
+    public String getAbstractTypes(String type) {
+        AbstractType _ret=null;
+        _ret = getVariable(type);
+        if(_ret != null) {
+            return _ret.getFieldTypeName();
+        }else{
+            _ret = getArgument(type);
+            if(_ret != null){
+                return _ret.getFieldTypeName();
+            }
+        }
+        return null;
+    }
+
     public AbstractType getVariable(String varName) {
         for(int i = 0; i < getVariables().size(); i++){
             if (getVariables().get(i).getName().equals(varName))

@@ -15,6 +15,18 @@ public class OffsetSymbolTable extends SymbolTable{
         }
     }
 
+    public static int getMethodOffset(String className, String methodName){
+        if(OffsetSymbolTable.hasClassNameIn(className)) {
+            Klass klass = getEntryClass(className);
+            for (int i = 0; i < klass.getMethods().size(); i++) {
+                if (klass.getMethods().get(i).equals(methodName)) {
+                    return i;
+                }
+            }
+        }
+        return 0;
+    }
+
     private static void createClassOffset(Klass klass){
         int klassOffset = 0;
         if(!klass.classHasMain()){
@@ -105,7 +117,7 @@ public class OffsetSymbolTable extends SymbolTable{
 
     public static int getClassFieldSizeSum(String className){
         Klass currentClass = null;
-        int fieldSizeSum = 0;
+        int fieldSizeSum = 8;   /*class has 8bytes by itself*/
         for (Map.Entry<AbstractType, Integer> entry : offsetSymbolTable.entrySet()){
             currentClass = (Klass)entry.getKey();
             if(currentClass.getName().equals(className)){

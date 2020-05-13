@@ -42,6 +42,17 @@ public class SymbolTable {
         return null;
     }
 
+    public static String getMethodClassName(String methodName){
+        Klass tempKlass;
+        for (Map.Entry<String, AbstractType> entry : symbolTable.entrySet()){
+            tempKlass = (Klass)entry.getValue();
+            if(tempKlass.getMethod(methodName)!=null){
+                return tempKlass.getName();
+            }
+        }
+        return null;
+    }
+
     public static String LookUp(String currentClassName, String currentMethodName, String currentVarName){
         Klass klass = getEntryClass(currentClassName);
         if(klass == null){
@@ -79,8 +90,6 @@ public class SymbolTable {
         return var.getFieldTypeName();
     }
 
-
-    //public static
 
     public static AbstractType lookUpSubClasses(String currentVarName, Klass currentClass){
         AbstractType var;

@@ -1,8 +1,9 @@
+import codeGenerator.CodeGenerator;
 import symbolTable.SymbolTable;
 import symbolTable.OffsetSymbolTable;
 import syntaxtree.*;
 import visitorsPr2.*;
-
+import static codeGenerator.CodeGenerator.*;
 import java.io.*;
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
@@ -34,9 +35,10 @@ class Main {
                 OffsetSymbolTable.printOffsetSymbolTable();
 
                 String[] fileName = inputFileName[1].split(".java");
-                LLVMIRGeneratorVisitor llvmirGeneratorVisitor = new LLVMIRGeneratorVisitor(fileName[0]);
+                new CodeGenerator(fileName[0]);
+                LLVMIRGeneratorVisitor llvmirGeneratorVisitor = new LLVMIRGeneratorVisitor();
                 root.accept(llvmirGeneratorVisitor, null);
-                llvmirGeneratorVisitor.closeWriter();
+                closeWriter();
 
                 System.out.println("_________________________________________");
             }
