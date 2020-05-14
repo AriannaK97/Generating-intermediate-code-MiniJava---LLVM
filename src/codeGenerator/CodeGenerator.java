@@ -8,6 +8,11 @@ public class CodeGenerator {
 
     private static PrintWriter writer;
     private static int temporaryRegisterNum = 0;
+    private static int ifElseLabelNum = 0;
+    private static int ifThenLabelNum = 0;
+    private static int ifEndLabelNum = 0;
+    private static int whileLabelNum = 0;
+    private static int forLabelNum = 0;
 
     public CodeGenerator(String fileName) throws FileNotFoundException, UnsupportedEncodingException {
         writer = new PrintWriter("out/LLVM-IR-Ouputs/myOutput/" + fileName + ".ll", "UTF-8");
@@ -37,6 +42,45 @@ public class CodeGenerator {
             default:
                 return "i8";
         }
+    }
+
+    public static String newIfElseLabel(){
+        String tempLabel = null;
+        tempLabel = "if_else_" + String.valueOf(ifElseLabelNum);
+        ifElseLabelNum+=1;
+        return tempLabel;
+    }
+
+    public static String newIfThenLabel(){
+        String tempLabel = null;
+        tempLabel = "if_then_" + String.valueOf(ifThenLabelNum);
+        ifThenLabelNum+=1;
+        return tempLabel;
+    }
+
+    public static String newIfEndLabel(){
+        String tempLabel = null;
+        tempLabel = "if_end_" + String.valueOf(ifEndLabelNum);
+        ifEndLabelNum+=1;
+        return tempLabel;
+    }
+
+    public static String new_While_label(){
+        String tempLabel = null;
+        tempLabel = "if" + String.valueOf(whileLabelNum);
+        whileLabelNum+=1;
+        return tempLabel;
+    }
+
+    public static String new_For_label(){
+        String tempLabel = null;
+        tempLabel = "for_" + String.valueOf(forLabelNum);
+        forLabelNum+=1;
+        return tempLabel;
+    }
+
+    public static void reinitializeTempRegisters(){
+        temporaryRegisterNum = 0;
     }
 
     public static void closeWriter(){
