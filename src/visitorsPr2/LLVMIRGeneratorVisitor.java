@@ -356,13 +356,27 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
         String _ret=null;
         String identifier=null;
         String expression=null;
+        String reg1, reg2;
 
         identifier = n.f0.accept(this, argu);
         expression = n.f2.accept(this, argu);
 
-        emit("\tstore " + expression + ", i32* %" +identifier + "\n");
+        String type = OffsetSymbolTable.getEntryClass(argu[0]).getMethod(argu[1]).getAbstractTypes(identifier);
+        if(type != null){
+            emit("\tstore " + expression + ", i32* " +identifier+ "\n");
+        }else {
+            reg1 = new_temp();
+            String className = SymbolTable.getFieldClassName(identifier);
+            type = OffsetSymbolTable.getEntryClass(argu[0]).getField(identifier).getFieldTypeName();
+            int identifierOffset = OffsetSymbolTable.getFieldOffset(className, identifier) + 8;
+            emit("\t"+ reg1 + " = getelementptr " + get_LLVM_type(identifier) + ", " + get_LLVM_type(identifier) + "* %this, i32 " + identifierOffset + "\n");
+            reg2 = new_temp();
+            emit("\t" + reg2 + " = bitcast " + get_LLVM_type(identifier) + "* " + reg1 + " to i32*\n");
+            emit("\tstore " + expression + ", i32* " + reg2 + "\n");
+        }
 
-        return _ret;
+
+        return identifier;
     }
 
     /**
@@ -724,6 +738,13 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
                 if (argu.length == 3) argu[2] = type;
 
                 _ret = get_LLVM_type(type) + " " + reg;
+            }else{
+                type = OffsetSymbolTable.getEntryClass(argu[0]).getField(primaryExpr).getFieldTypeName();
+                if(type != null){
+                    String reg =  new_temp();
+
+                    _ret = get_LLVM_type(type) + " " + reg;
+                }
             }
 
         }else if(primaryExpr.contains(" "))
@@ -801,13 +822,33 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
     public String visit(IntegerArrayAllocationExpression n, String[] argu) {
         String _ret=null;
         String arraySize=null;
+        String reg1, reg2, reg3;
+        String arrayLabel=null;
+        String arrayLabelError=null;
+
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        emit("\n\t;check if the array zise is negative\n\n");
         arraySize = n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        //emit(new_temp()+" = call i8* @calloc( i32 1, i32 " + OffsetSymbolTable.getClassFieldSizeSum(argu[0])+")");
-        return "int[]";
+
+        reg1 = new_temp();
+        arrayLabelError = newArrayLabel();
+        arrayLabel = newArrayLabel();
+        emit("\t" + reg1 + " = icmp slt " + arraySize + ", 0\n" );
+        emit("\tbr i1 " + reg1 + ", label %" + arrayLabelError + ", label %" + arrayLabel + "\n");
+        emit("\n" + arrayLabelError + ":\n\tcall void @throw_oob()\n\tbr label %" + arrayLabel + "\n\n");
+        emit(arrayLabel + ":\n");
+
+        reg2 = new_temp();
+        emit("\t" + reg2 + " = add " + arraySize + ", 1\n");
+        reg3 = new_temp();
+        emit("\t" + reg3 + " = call i8* @calloc(i32 4, i32 " + reg2 + ")\n");
+        reg2 = new_temp();
+        emit("\t" + reg2 + " = bitcast i8* " + reg3 + " to i32*\n");
+        emit("\tstore " + arraySize + ", i32* " + reg2 + "\n\n");
+
+        _ret = "i32* " + reg2;
+        return _ret;
     }
 
     /**

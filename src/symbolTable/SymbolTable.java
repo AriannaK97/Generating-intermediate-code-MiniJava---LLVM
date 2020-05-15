@@ -53,6 +53,17 @@ public class SymbolTable {
         return null;
     }
 
+    public static String getFieldClassName(String fieldName){
+        Klass tempKlass;
+        for (Map.Entry<String, AbstractType> entry : symbolTable.entrySet()){
+            tempKlass = (Klass)entry.getValue();
+            if(tempKlass.getField(fieldName)!=null){
+                return tempKlass.getName();
+            }
+        }
+        return null;
+    }
+
     public static String LookUp(String currentClassName, String currentMethodName, String currentVarName){
         Klass klass = getEntryClass(currentClassName);
         if(klass == null){

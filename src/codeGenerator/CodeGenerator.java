@@ -13,6 +13,7 @@ public class CodeGenerator {
     private static int ifEndLabelNum = 0;
     private static int whileLabelNum = 0;
     private static int forLabelNum = 0;
+    private static int arrayAllocNum=0;
 
     public CodeGenerator(String fileName) throws FileNotFoundException, UnsupportedEncodingException {
         writer = new PrintWriter("out/LLVM-IR-Ouputs/myOutput/" + fileName + ".ll", "UTF-8");
@@ -67,7 +68,7 @@ public class CodeGenerator {
 
     public static String new_While_label(){
         String tempLabel = null;
-        tempLabel = "if" + String.valueOf(whileLabelNum);
+        tempLabel = "while_" + String.valueOf(whileLabelNum);
         whileLabelNum+=1;
         return tempLabel;
     }
@@ -76,6 +77,13 @@ public class CodeGenerator {
         String tempLabel = null;
         tempLabel = "for_" + String.valueOf(forLabelNum);
         forLabelNum+=1;
+        return tempLabel;
+    }
+
+    public static String newArrayLabel(){
+        String tempLabel = null;
+        tempLabel = "array_alloc" + String.valueOf(arrayAllocNum);
+        arrayAllocNum+=1;
         return tempLabel;
     }
 

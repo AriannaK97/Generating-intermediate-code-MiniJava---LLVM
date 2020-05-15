@@ -19,10 +19,25 @@ public class OffsetSymbolTable extends SymbolTable{
         if(OffsetSymbolTable.hasClassNameIn(className)) {
             Klass klass = getEntryClass(className);
             for (int i = 0; i < klass.getMethods().size(); i++) {
-                if (klass.getMethods().get(i).equals(methodName)) {
+                if (klass.getMethods().get(i).getName().equals(methodName)) {
                     return i;
                 }
             }
+        }
+        return 0;
+    }
+
+    public static int getFieldOffset(String className, String varName){
+        int offset = 0;
+        if(OffsetSymbolTable.hasClassNameIn(className)) {
+            Klass klass = getEntryClass(className);
+            for (int i = 0; i < klass.getFields().size(); i++) {
+                if (klass.getFields().get(i).getName().equals(varName)) {
+                    return offset;
+                }
+                offset += klass.getFields().get(i).getSize();
+            }
+
         }
         return 0;
     }
