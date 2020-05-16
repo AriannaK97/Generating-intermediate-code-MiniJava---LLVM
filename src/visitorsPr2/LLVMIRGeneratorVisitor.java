@@ -98,20 +98,17 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
      */
     public String visit(MainClass n, String[] argu) {
         String _ret=null;
-        String varDeclOut = "";
-        String statementOut = "";
-        String[] idNames = new String[2];
-        idNames[0] = n.f1.accept(this, argu);
+        String[] idNames = new String[2];idNames[0] = n.f1.accept(this, argu);
         idNames[1] = n.f6.toString();
 
         emit("define i32 @"+idNames[1]+"() {\n");
         if(n.f14.present())
-            varDeclOut = n.f14.accept(this, argu);
+            n.f14.accept(this, argu);
         if(n.f15.present())
-            statementOut = n.f15.accept(this, idNames);
+            n.f15.accept(this, idNames);
         emit("\n\tret i32 0\n}\n\n");
 
-        reinitializeTempRegisters();
+        //reinitializeTempRegisters();
 
         return _ret;
     }
@@ -137,7 +134,7 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
         String[] idNames = new String[2];
         idNames[0] = n.f1.accept(this, argu);
         if(n.f3.present())
-            n.f3.accept(this, argu);
+            //n.f3.accept(this, argu);
         if(n.f4.present())
             n.f4.accept(this, idNames);
         return _ret;
@@ -158,7 +155,7 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
         String[] idNames = new String[2];
         idNames[0] = n.f1.accept(this, argu);
         if (n.f5.present())
-            n.f5.accept(this, argu);
+            //n.f5.accept(this, argu);
         if(n.f6.present())
             n.f6.accept(this, idNames);
         return _ret;
@@ -228,6 +225,7 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
         emit("\tret "+returnType+"\n}\n\n");
 
         reinitializeTempRegisters();
+        reinitializeLabels();
 
         return _ret;
     }
@@ -363,16 +361,17 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
 
         String type = OffsetSymbolTable.getEntryClass(argu[0]).getMethod(argu[1]).getAbstractTypes(identifier);
         if(type != null){
-            emit("\tstore " + expression + ", i32* " +identifier+ "\n");
+            emit("\tstore " + expression + ", i32* %" +identifier+ "\n\n");
         }else {
             reg1 = new_temp();
             String className = SymbolTable.getFieldClassName(identifier);
             type = OffsetSymbolTable.getEntryClass(argu[0]).getField(identifier).getFieldTypeName();
             int identifierOffset = OffsetSymbolTable.getFieldOffset(className, identifier) + 8;
-            emit("\t"+ reg1 + " = getelementptr " + get_LLVM_type(identifier) + ", " + get_LLVM_type(identifier) + "* %this, i32 " + identifierOffset + "\n");
+            emit("\t"+ reg1 + " = getelementptr " + get_LLVM_type(identifier) + ", " + get_LLVM_type(identifier)
+                    + "* %this, i32 " + identifierOffset + "\n");
             reg2 = new_temp();
-            emit("\t" + reg2 + " = bitcast " + get_LLVM_type(identifier) + "* " + reg1 + " to i32*\n");
-            emit("\tstore " + expression + ", i32* " + reg2 + "\n");
+            emit("\t" + reg2 + " = bitcast " + get_LLVM_type(identifier) + "* " + reg1 + " to " + get_LLVM_type(type) +"*\n");
+            emit("\tstore " + expression + ", i32** " + reg2 + "\n\n");
         }
 
 
@@ -390,13 +389,30 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
      */
     public String visit(ArrayAssignmentStatement n, String[] argu) {
         String _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        n.f6.accept(this, argu);
+        String identifier, expr1, expr2;
+        String reg1, reg2, reg3;
+
+        identifier = n.f0.accept(this, argu);
+        expr1 = n.f2.accept(this, argu);
+        expr2 = n.f5.accept(this, argu);
+
+        String type = OffsetSymbolTable.getEntryClass(argu[0]).getMethod(argu[1]).getAbstractTypes(identifier);
+        if(type != null){
+            reg1 = new_temp();
+            emit("\t" + reg1 + "= load i32, i32* %" +identifier+ "\n\n");
+        }else {
+            reg1 = new_temp();
+            String className = SymbolTable.getFieldClassName(identifier);
+            type = OffsetSymbolTable.getEntryClass(argu[0]).getField(identifier).getFieldTypeName();
+            int identifierOffset = OffsetSymbolTable.getFieldOffset(className, identifier) + 8;
+            emit("\t"+ reg1 + " = getelementptr " + get_LLVM_type(identifier) + ", " + get_LLVM_type(identifier)
+                    + "* %this, i32 " + identifierOffset + "\n");
+            reg2 = new_temp();
+            emit("\t" + reg2 + " = bitcast " + get_LLVM_type(identifier) + "* " + reg1 + " to " + get_LLVM_type(type) +"*\n");
+            reg3 = new_temp();
+            emit("\t" + reg3 + "= load i32, i32* %" +reg2+ "\n\n");
+        }
+//Todo: complete for check in array borders
         return _ret;
     }
 
@@ -448,12 +464,24 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
     public String visit(WhileStatement n, String[] argu) {
         String _ret=null;
         String expr=null;
-        String whileLabel = new_While_label();
+        String whileLabel1 = newWhileLabel();
+        String whileLabel2 = newWhileLabel();
+        String whileLabelEnd = newWhileLabel();
 
-        emit(whileLabel + ":\n\n");
-        String statement=null;
+        emit("\tbr label %" + whileLabel1 + "\n\n");
+        emit(whileLabel1 + ":\n");
+
         expr = n.f2.accept(this, argu);
-        statement = n.f4.accept(this, argu);
+
+        emit("\tbr " + expr + ", label %" + whileLabel2 + ", label %" + whileLabelEnd + "\n\n");
+        emit(whileLabel2 + ":\n");
+
+        n.f4.accept(this, argu);
+
+        emit("\tbr label %" + whileLabel1 + "\n\n");
+
+        emit(whileLabelEnd + ":\n\n");
+
         return _ret;
     }
 
@@ -468,7 +496,7 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
         String _ret=null;
         n.f0.accept(this, argu);
         String expression = n.f2.accept(this, argu);
-        emit("\tcall void (i32) @print_int(" + expression + ")\n");
+        emit("\tcall void (i32) @print_int(" + expression + ")\n\n");
         return _ret;
     }
 
@@ -596,10 +624,36 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
      */
     public String visit(ArrayLookup n, String[] argu) {
         String _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
+        String primaryExpr1;
+        String primaryExpr2 = null;
+        String reg1, reg2, reg3, reg4 ,oobLabel_OK, oobLabel_ERR;
+        primaryExpr1 = n.f0.accept(this, argu);
+        primaryExpr2 = n.f2.accept(this, argu);
+
+        reg1 = new_temp();
+        reg2 = new_temp();
+        reg3 = new_temp();
+        reg4 = new_temp();
+        oobLabel_OK = newOOBLabel();
+        oobLabel_ERR = newOOBLabel();
+
+        emit("\t" + reg1 + " = load i32, " + primaryExpr1 + "\n");
+        emit("\t" + reg2 + " = icmp sge " + primaryExpr2 + ", 0\n");  /*check if the array index is greter than zero*/
+        emit("\t" + reg3 + " = icmp slt " + primaryExpr2 + ", " + reg1 + "\n"); /*check that the index is less than the array size*/
+        emit("\t" + reg4 + " and i1 " + reg2 + ", " + reg3 + "\n\tbr i1 " + reg4 + ", label %" + oobLabel_OK + ", label %" + oobLabel_ERR + "\n\n");
+        emit(oobLabel_OK + ":\n");
+        reg4 = new_temp();
+        emit("\t" + reg4 + " = add " + primaryExpr2 + ", 1\n");
+        reg3 = new_temp();
+        emit("\t" + reg3 + " = getelementptr i32, i32* " + reg1 + ", i32 " + reg4 + "\n");
+        reg4 = new_temp();
+        oobLabel_OK = newOOBLabel();
+        emit("\t" + reg4 + " = load i32, i32* " + reg3 +"\n\tbr label %" + oobLabel_OK + "\n\n");
+        emit(oobLabel_ERR + ":\n\tcall void @throw_oob()\n\tbr label %" + oobLabel_OK + "\n\n");
+        emit(oobLabel_OK + ":\n");
+
+        _ret = "i32 " + reg4;
+
         return _ret;
     }
 
@@ -626,7 +680,7 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
      */
     public String visit(MessageSend n, String[] argu) {
         String _ret=null;
-        String exprList=null;
+        String exprList="";
         String reg1, reg2, type, methodClassName, identifier, primaryExpr;
 
         String[] primaryExprArgu = new String[3];
@@ -647,7 +701,7 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
          */
         reg1 = new_temp();
         reg2 = new_temp();
-        emit("\t; " + methodClassName +"." + identifier + " : "+ OffsetSymbolTable.getMethodOffset(primaryExprArgu[2], identifier) +"\n");
+        emit("\t; " + methodClassName +"." + identifier + " : "+ methodOffset +"\n");
         emit("\t" + reg1 + " = bitcast " + primaryExpr + " to i8***\n");
         emit("\t" + reg2 + " = load i8**, i8*** " + reg1 + "\n");
         reg1 = new_temp();
@@ -741,9 +795,20 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
             }else{
                 type = OffsetSymbolTable.getEntryClass(argu[0]).getField(primaryExpr).getFieldTypeName();
                 if(type != null){
-                    String reg =  new_temp();
+                    String reg1 = new_temp();
+                    String className = SymbolTable.getFieldClassName(primaryExpr);
+                    type = OffsetSymbolTable.getEntryClass(argu[0]).getField(primaryExpr).getFieldTypeName();
+                    int identifierOffset = OffsetSymbolTable.getFieldOffset(className, primaryExpr) + 8;
+                    emit("\t"+ reg1 + " = getelementptr " + get_LLVM_type(primaryExpr) + ", " + get_LLVM_type(primaryExpr)
+                            + "* %this, i32 " + identifierOffset + "\n");
+                    String reg2 = new_temp();
+                    emit("\t" + reg2 + " = bitcast " + get_LLVM_type(primaryExpr) + "* " + reg1 + " to " + get_LLVM_type(type) + "*\n");
+                    reg1 = new_temp();
+                    emit("\t" + reg1 + " = load " + get_LLVM_type(type) +"," + get_LLVM_type(type) + "* "+ reg2 + "\n");
 
-                    _ret = get_LLVM_type(type) + " " + reg;
+                    if (argu.length == 3) argu[2] = type;
+
+                    _ret = get_LLVM_type(type) + " " + reg1;
                 }
             }
 
@@ -845,7 +910,7 @@ public class LLVMIRGeneratorVisitor extends GJDepthFirst <String, String[]> {
         emit("\t" + reg3 + " = call i8* @calloc(i32 4, i32 " + reg2 + ")\n");
         reg2 = new_temp();
         emit("\t" + reg2 + " = bitcast i8* " + reg3 + " to i32*\n");
-        emit("\tstore " + arraySize + ", i32* " + reg2 + "\n\n");
+        emit("\tstore " + arraySize + ", i32* " + reg2 + "\n");
 
         _ret = "i32* " + reg2;
         return _ret;

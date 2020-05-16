@@ -13,7 +13,8 @@ public class CodeGenerator {
     private static int ifEndLabelNum = 0;
     private static int whileLabelNum = 0;
     private static int forLabelNum = 0;
-    private static int arrayAllocNum=0;
+    private static int arrayAllocNum = 0;
+    private static int oobNum = 0;
 
     public CodeGenerator(String fileName) throws FileNotFoundException, UnsupportedEncodingException {
         writer = new PrintWriter("out/LLVM-IR-Ouputs/myOutput/" + fileName + ".ll", "UTF-8");
@@ -66,9 +67,9 @@ public class CodeGenerator {
         return tempLabel;
     }
 
-    public static String new_While_label(){
+    public static String newWhileLabel(){
         String tempLabel = null;
-        tempLabel = "while_" + String.valueOf(whileLabelNum);
+        tempLabel = "loop" + String.valueOf(whileLabelNum);
         whileLabelNum+=1;
         return tempLabel;
     }
@@ -82,13 +83,29 @@ public class CodeGenerator {
 
     public static String newArrayLabel(){
         String tempLabel = null;
-        tempLabel = "array_alloc" + String.valueOf(arrayAllocNum);
+        tempLabel = "arr_alloc" + String.valueOf(arrayAllocNum);
         arrayAllocNum+=1;
+        return tempLabel;
+    }
+
+    public static String newOOBLabel(){
+        String tempLabel = null;
+        tempLabel = "oob" + String.valueOf(oobNum);
+        oobNum+=1;
         return tempLabel;
     }
 
     public static void reinitializeTempRegisters(){
         temporaryRegisterNum = 0;
+    }
+    public static void reinitializeLabels(){
+        ifElseLabelNum = 0;
+        ifThenLabelNum = 0;
+        ifEndLabelNum = 0;
+        whileLabelNum = 0;
+        forLabelNum = 0;
+        arrayAllocNum = 0;
+        oobNum = 0;
     }
 
     public static void closeWriter(){
