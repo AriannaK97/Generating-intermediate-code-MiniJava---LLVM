@@ -550,7 +550,7 @@ public class SemanticCheckerVisitor extends GJDepthFirst <String, String[]> {
      * f3 -> "]"
      */
     public String visit(ArrayLookup n, String[] argu) {
-        String _ret="int";
+        String _ret=null;
         String primaryExpr1, primaryExpr2;
         primaryExpr1 = n.f0.accept(this, argu);
         if(!primaryExpr1.equals("int[]") && !primaryExpr1.equals("boolean[]")){
@@ -562,6 +562,14 @@ public class SemanticCheckerVisitor extends GJDepthFirst <String, String[]> {
             throw new SemanticCheckerException("Error! In method "+ argu[1] + " of class " + argu[0] + ". Invalid Primary Expression, " +
                     "should be type int not " + primaryExpr2);
         }
+
+        /*the following 5 lines of code are missing in the version
+         *of HW2 I have turned in - congrats to me -_- nailed it
+         **/
+        if(primaryExpr1.equals("boolean[]")){
+            _ret = "boolean";
+        }else
+            _ret = "int";
         return _ret;
     }
 
@@ -752,9 +760,9 @@ public class SemanticCheckerVisitor extends GJDepthFirst <String, String[]> {
     public String visit(BooleanArrayAllocationExpression n, String[] argu) {
         String _ret="boolean[]";
         String expr = n.f3.accept(this, argu);
-        if(!expr.equals("boolean")){
+        if(!expr.equals("int")){
             throw new SemanticCheckerException("Error! In method "+ argu[1] + " of class " + argu[0] + ". Invalid Expression, " +
-                    "should be boolean not " + expr);
+                    "should be int not " + expr);
         }
         return _ret;
     }

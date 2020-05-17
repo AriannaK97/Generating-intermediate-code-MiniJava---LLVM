@@ -67,17 +67,10 @@ public class CodeGenerator {
         return tempLabel;
     }
 
-    public static String newWhileLabel(){
+    public static String newLoopLabel(){
         String tempLabel = null;
         tempLabel = "loop" + String.valueOf(whileLabelNum);
         whileLabelNum+=1;
-        return tempLabel;
-    }
-
-    public static String new_For_label(){
-        String tempLabel = null;
-        tempLabel = "for_" + String.valueOf(forLabelNum);
-        forLabelNum+=1;
         return tempLabel;
     }
 
