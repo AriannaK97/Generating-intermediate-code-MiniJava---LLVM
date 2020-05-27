@@ -133,16 +133,33 @@ public class OffsetSymbolTable extends SymbolTable{
     public static int getClassFieldSizeSum(String className){
         Klass currentClass = null;
         int fieldSizeSum = 8;   /*class has 8bytes by itself*/
-        for (Map.Entry<AbstractType, Integer> entry : offsetSymbolTable.entrySet()){
-            currentClass = (Klass)entry.getKey();
-            if(currentClass.getName().equals(className)){
-                for(int i = 0; i < currentClass.getFields().size(); i++){
-                    fieldSizeSum += currentClass.getFields().get(i).getSize();
-                }
-            }
+        currentClass = OffsetSymbolTable.getEntryClass(className);
+
+        for(int i = 0; i < currentClass.getFields().size(); i++){
+            fieldSizeSum += currentClass.getFields().get(i).getSize();
         }
+
         return fieldSizeSum;
     }
+
+    public static int getMethodVarSizeSum(String className, String methodName){
+        Klass currentClass = null;
+        Method currentMethod = null;
+        int fieldSizeSum = 8;   /*class has 8bytes by itself*/
+        currentClass = OffsetSymbolTable.getEntryClass(className);
+        currentMethod = currentClass.getMethod(methodName);
+
+        for(int i = 0; i < currentClass.getFields().size(); i++){
+            fieldSizeSum += currentClass.getFields().get(i).getSize();
+        }
+
+        for (int i = 0; i < currentMethod.getVariables().size(); i++){
+            fieldSizeSum += currentMethod.getVariables().get(i).getSize();
+        }
+
+        return fieldSizeSum;
+    }
+
 
     public static void printOffsetSymbolTable(){
         for (Map.Entry<AbstractType, Integer> entry : offsetSymbolTable.entrySet()){

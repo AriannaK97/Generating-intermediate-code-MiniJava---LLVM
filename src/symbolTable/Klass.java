@@ -65,6 +65,11 @@ public class Klass extends AbstractType {
                 return getFields().get(i);
             }
         }
+
+        if(this.hasSuperClass()){
+            return this.superClass.getField(fieldName);
+        }
+
         return null;
     }
 
@@ -99,7 +104,10 @@ public class Klass extends AbstractType {
     }
 
     public int getNumberOfMethods() {
-        return this.methods.size();
+        if(this.classHasMain())
+            return this.methods.size() - 1;
+        else
+            return this.methods.size();
     }
 
     public boolean hasMethod(String methodName, String[] args){
