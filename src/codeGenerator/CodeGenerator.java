@@ -17,15 +17,13 @@ public class CodeGenerator {
     private static int ifThenLabelNum = 0;
     private static int ifEndLabelNum = 0;
     private static int whileLabelNum = 0;
-    private static int forLabelNum = 0;
-    private static int arrayAllocNum = 0;
     private static int oobNum = 0;
     private static int nszOkNum = 0;
     private static int nszErrNum = 0;
 
     public CodeGenerator(String fileName) throws FileNotFoundException, UnsupportedEncodingException {
-        writer = new PrintWriter("out/LLVM-IR-Ouputs/myOutput/" + fileName + ".ll", "UTF-8");
-        System.out.println("File out/LLVM-IR-Ouputs/myOutput/" + fileName + ".ll has been successfully created");
+        writer = new PrintWriter(/*"out/LLVM-IR-Ouputs/myOutput/" + */fileName + ".ll", "UTF-8");
+        System.out.println("File " + fileName + ".ll has been successfully created");
     }
 
     public static void emit(String code){
@@ -112,56 +110,49 @@ public class CodeGenerator {
     }
 
     public static String newIfElseLabel(){
-        String tempLabel = null;
+        String tempLabel;
         tempLabel = "if_else_" + String.valueOf(ifElseLabelNum);
         ifElseLabelNum+=1;
         return tempLabel;
     }
 
     public static String newIfThenLabel(){
-        String tempLabel = null;
+        String tempLabel;
         tempLabel = "if_then_" + String.valueOf(ifThenLabelNum);
         ifThenLabelNum+=1;
         return tempLabel;
     }
 
     public static String newIfEndLabel(){
-        String tempLabel = null;
+        String tempLabel;
         tempLabel = "if_end_" + String.valueOf(ifEndLabelNum);
         ifEndLabelNum+=1;
         return tempLabel;
     }
 
     public static String newLoopLabel(){
-        String tempLabel = null;
+        String tempLabel;
         tempLabel = "loop" + String.valueOf(whileLabelNum);
         whileLabelNum+=1;
         return tempLabel;
     }
 
-    public static String newArrayLabel(){
-        String tempLabel = null;
-        tempLabel = "arr_alloc" + String.valueOf(arrayAllocNum);
-        arrayAllocNum+=1;
-        return tempLabel;
-    }
-
     public static String newOOBLabel(){
-        String tempLabel = null;
+        String tempLabel;
         tempLabel = "oob" + String.valueOf(oobNum);
         oobNum+=1;
         return tempLabel;
     }
 
     public static String newNszOkLabel(){
-        String tempLabel = null;
+        String tempLabel;
         tempLabel = "nsz_ok_" + String.valueOf(nszOkNum);
         nszOkNum+=1;
         return tempLabel;
     }
 
     public static String newNszErrLabel(){
-        String tempLabel = null;
+        String tempLabel;
         tempLabel = "nsz_err_" + String.valueOf(nszErrNum);
         nszErrNum+=1;
         return tempLabel;
@@ -170,14 +161,15 @@ public class CodeGenerator {
     public static void reinitializeTempRegisters(){
         temporaryRegisterNum = 0;
     }
+
     public static void reinitializeLabels(){
         ifElseLabelNum = 0;
         ifThenLabelNum = 0;
         ifEndLabelNum = 0;
         whileLabelNum = 0;
-        forLabelNum = 0;
-        arrayAllocNum = 0;
         oobNum = 0;
+        nszErrNum = 0;
+        nszOkNum = 0;
     }
 
     public static void closeWriter(){

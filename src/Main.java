@@ -32,10 +32,16 @@ class Main {
                 SemanticCheckerVisitor semanticCheckerVisitor = new SemanticCheckerVisitor();
                 root.accept(semanticCheckerVisitor, null);
                 new OffsetSymbolTable();
-                OffsetSymbolTable.printOffsetSymbolTable();
 
-                String[] fileName = inputFileName[1].split(".java");
-                new CodeGenerator(fileName[0]);
+                /*Uncomment line below to print the OffsetSymbolTable*/
+                //OffsetSymbolTable.printOffsetSymbolTable();
+
+                /*Get the name of the class that holds the main method in order to name
+                 *the .ll file where the llvm code will be written*/
+                String fileName = SymbolTable.getMainClassName();
+                new CodeGenerator(fileName);
+
+                /*visitor for llvm production*/
                 LLVMIRGeneratorVisitor llvmirGeneratorVisitor = new LLVMIRGeneratorVisitor();
                 root.accept(llvmirGeneratorVisitor, null);
                 closeWriter();

@@ -42,25 +42,54 @@ public class SymbolTable {
         return null;
     }
 
-    public static String getMethodClassName(String methodName){
+    public static String getMainClassName(){
         Klass tempKlass;
         for (Map.Entry<String, AbstractType> entry : symbolTable.entrySet()){
             tempKlass = (Klass)entry.getValue();
-            if(tempKlass.getMethod(methodName)!=null){
+            if(tempKlass.getMethod("main")!=null){
                 return tempKlass.getName();
             }
         }
         return null;
     }
 
-    public static String getFieldClassName(String fieldName){
+    public static String getMethodClassName(String className, String methodName){
         Klass tempKlass;
+        tempKlass = getEntryClass(className);
+
+        for (int i = 0; i < tempKlass.getMethods().size(); i++){
+            if(tempKlass.getMethod(methodName)!=null){
+                return tempKlass.getName();
+            }
+        }
+        if(tempKlass.hasSuperClass()){
+            return getMethodClassName(tempKlass.getSuperClassName(), methodName);
+        }
+
+        return null;
+    }
+
+    public static String getFieldClassName(String className, String fieldName){
+        Klass tempKlass;
+        tempKlass = getEntryClass(className);
+
+        for (int i = 0; i < tempKlass.getFields().size(); i++){
+            if(tempKlass.getField(fieldName)!=null){
+                return tempKlass.getName();
+            }
+        }
+        if(tempKlass.hasSuperClass()){
+            return getFieldClassName(tempKlass.getSuperClassName(), fieldName);
+        }
+
+
+/*        Klass tempKlass;
         for (Map.Entry<String, AbstractType> entry : symbolTable.entrySet()){
             tempKlass = (Klass)entry.getValue();
             if(tempKlass.getField(fieldName)!=null){
                 return tempKlass.getName();
             }
-        }
+        }*/
         return null;
     }
 
